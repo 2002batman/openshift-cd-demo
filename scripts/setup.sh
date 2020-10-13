@@ -1,7 +1,5 @@
 #!/bin/bash
 
-KUBECONFIG=/home/enochlee/.kube.ico/config
-
 echo "###############################################################################"
 echo "#  MAKE SURE YOU ARE LOGGED IN:                                               #"
 echo "#  $ oc login http://console.your.openshift.com                               #"
@@ -141,7 +139,6 @@ OPENSHIFT_USER=${ARG_USERNAME:-$LOGGEDIN_USER}
 PRJ_PREFIX=${ARG_PROJECT_PREFIX:-`echo $OPENSHIFT_USER | sed -e 's/[-@].*//g'`}
 GITHUB_ACCOUNT=${GITHUB_ACCOUNT:-2002batman}
 GITHUB_REF=${GITHUB_REF:-ocp-4.4}
-JENKINS_TMPLT=jenkins-persistent
 
 function deploy() {
   oc $ARG_OC_OPS new-project $PRJ_PREFIX-dev   --display-name="Tasks - Dev"
@@ -168,14 +165,7 @@ function deploy() {
 
   sleep 2
 
-  CSI_DRIVER=ocs-storagecluster-ceph-rbd
-  JENKINS_TMPLT=jenkins-$PRJ_PREFIX 
-  oc get template -n openshift jenkins-persistent -o yaml | sed "s/jenkins-persistent/${JENKINS_TMPLT}/g" | \
-    sed '/PersistentVolumeClaim/{n;d}' | \
-    sed "/PersistentVolumeClaim/a\  \metadata:\n    annotations:\n      volume.beta.kubernetes.io/storage-class: ${CSI_DRIVER}" | \
-  oc apply -f- 
-
-  oc new-app ${JENKINS_TMPLT} -n $PRJ_PREFIX-cicd
+  oc new-app jenkins-persistent -n $PRJ_PREFIX-cicd
 
   sleep 2
 
